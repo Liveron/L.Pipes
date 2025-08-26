@@ -1,0 +1,56 @@
+name: CI Nuget Package
+
+on: workflow_dispatch
+
+env:
+  DOTNET_VERSION: "9.x"
+  SOURCE_URL: "https://nuget.pkg.github.com/Liveron/index.json"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          source-url: ${{ env.SOURCE_URL }}
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_PACKAGES_ACCESS_TOKEN }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build
+
+  pack-and-publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          source-url: ${{ env.SOURCE_URL }}
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_PACKAGES_ACCESS_TOKEN }}
+
+      - name: Pack
+        run: dotnet pack --configuration Release -o ./artifacts
+
+      - name: Publish to GitHub Packages
+        working-directory: artifacts
+        run: |
+          dotnet nuget push * --source ${{ env.SOURCE_URL }} \
+          --api-key ${{ secrets.NUGET_PACKAGES_ACCESS_TOKEN }} \
+          --skip-duplicate
