@@ -5,7 +5,7 @@ public interface IPipeContext
     public object Payload { get; set; }
 }
 
-public interface IPipeContext<T>
+public interface IPipeContext<T> : IPipeContext
 {
-    public T Payload { get; set; }
+    public new T Payload { get; set; }
 }
