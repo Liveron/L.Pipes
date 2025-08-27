@@ -9,8 +9,8 @@ public class Pipe
         if (filters.Count == 0) 
             return;
 
-        FilterDelegate pipeline = _ => filters.Last()
-            .HandleAsync(context, _ => Task.CompletedTask);
+        FilterDelegate pipeline = ctx => filters.Last()
+            .HandleAsync(ctx, _ => Task.CompletedTask);
 
         for (int i = filters.Count - 2; i >= 0; i--)
         {
